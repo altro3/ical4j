@@ -83,11 +83,20 @@ public class ZoneRulesBuilder {
                     vTimeZone.getObservances().get(Observance.DAYLIGHT));
         }
 
-        TzOffsetFrom offsetFrom = current.getProperties().getRequired(Property.TZOFFSETFROM);
-        TzOffsetTo offsetTo = current.getProperties().getRequired(Property.TZOFFSETTO);
+        ZoneOffset standardOffset;
+        ZoneOffset wallOffset;
 
-        ZoneOffset standardOffset = offsetTo.getOffset();
-        ZoneOffset wallOffset = offsetFrom.getOffset();
+        if (current != null){
+            TzOffsetFrom offsetFrom = current.getProperties().getRequired(Property.TZOFFSETFROM);
+            TzOffsetTo offsetTo = current.getProperties().getRequired(Property.TZOFFSETTO);
+            standardOffset = offsetTo.getOffset();
+            wallOffset = offsetFrom.getOffset();
+        } else {
+            ZoneId zoneId = ZoneId.of( vTimeZone.getProperties().getRequired(Property.TZID).getValue());
+            standardOffset = zoneId.getRules().getStandardOffset(Instant.now());
+            wallOffset = zoneId.getRules().getOffset(Instant.now());
+        }
+
         List<ZoneOffsetTransition> standardOffsetTransitions = buildTransitions(
                 vTimeZone.getObservances().get(Observance.STANDARD));
         Collections.sort(standardOffsetTransitions);
